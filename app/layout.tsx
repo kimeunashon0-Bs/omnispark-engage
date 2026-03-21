@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Playfair_Display, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const _inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const _playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const _geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: 'Marketing Platform - Your Brand',
-  description: 'Multi-tenant digital marketing and communication platform',
+  title: 'Nexus | Enterprise Marketing Platform',
+  description: 'The premium multi-tenant digital marketing and communication platform for enterprise businesses',
   generator: 'v0.app',
   icons: {
     icon: [

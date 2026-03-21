@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
-import { Moon, Sun, LogOut, Menu, Shield } from "lucide-react"
+import { Moon, Sun, LogOut, Menu, Shield, Sparkles, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -66,7 +66,7 @@ export function Header() {
     .toUpperCase() || "U"
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background px-4 lg:px-6">
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur-sm px-4 lg:px-6">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
@@ -75,12 +75,17 @@ export function Header() {
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <SheetHeader className="p-4 border-b">
-              <SheetTitle className="text-left">Your Brand</SheetTitle>
+          <SheetContent side="left" className="w-64 p-0 bg-sidebar">
+            <SheetHeader className="p-4 border-b border-sidebar-border">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-gold">
+                  <Sparkles className="h-4 w-4 text-sidebar" />
+                </div>
+                <SheetTitle className="text-left text-sidebar-foreground">Nexus</SheetTitle>
+              </div>
               <SheetDescription className="sr-only">Navigation menu</SheetDescription>
             </SheetHeader>
-            <nav className="p-2 space-y-1">
+            <nav className="p-3 space-y-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href || 
                   (item.href !== "/dashboard" && pathname.startsWith(item.href))
@@ -90,10 +95,10 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                       isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     )}
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
@@ -105,10 +110,24 @@ export function Header() {
           </SheetContent>
         </Sheet>
         
-        <span className="font-semibold text-lg hidden sm:inline-block">{tenantName}</span>
+        <div className="hidden sm:flex items-center gap-3">
+          <span className="font-semibold text-lg">{tenantName}</span>
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20">
+            <Sparkles className="h-3 w-3 text-gold" />
+            <span className="text-xs font-medium text-gold">Pro</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {/* Notifications */}
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-gold rounded-full" />
+          <span className="sr-only">Notifications</span>
+        </Button>
+
+        {/* Theme Toggle */}
         {mounted && (
           <Button
             variant="ghost"
@@ -124,28 +143,31 @@ export function Header() {
           </Button>
         )}
 
+        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback>{initials}</AvatarFallback>
+            <Button variant="ghost" className="relative h-9 w-9 rounded-full ml-1">
+              <Avatar className="h-9 w-9 border-2 border-gold/30">
+                <AvatarFallback className="bg-gradient-gold text-primary font-semibold">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="flex flex-col space-y-1 p-2">
+          <DropdownMenuContent align="end" className="w-56 border-border/50 shadow-premium">
+            <div className="flex flex-col space-y-1 p-3 bg-secondary/30 rounded-t-lg -mt-1 -mx-1 mb-1">
               <p className="text-sm font-medium">{user?.name}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/admin" className="cursor-pointer">
-                <Shield className="mr-2 h-4 w-4" />
+                <Shield className="mr-2 h-4 w-4 text-gold" />
                 Admin Panel
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
