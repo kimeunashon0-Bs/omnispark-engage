@@ -1,6 +1,6 @@
 "use client"
 
-import type { Tenant, User, Contact, Campaign, TenantSettings, AnalyticsData } from './types'
+import type { Tenant, User, Contact, Campaign, TenantSettings, AnalyticsData, AdminUser, TenantWithStats, PlatformStats, SystemSettings } from './types'
 
 const STORAGE_KEYS = {
   TENANT: 'dashboard_tenant',
@@ -8,6 +8,9 @@ const STORAGE_KEYS = {
   CONTACTS: 'dashboard_contacts',
   CAMPAIGNS: 'dashboard_campaigns',
   SETTINGS: 'dashboard_settings',
+  ADMIN_USER: 'admin_user',
+  ALL_TENANTS: 'all_tenants',
+  SYSTEM_SETTINGS: 'system_settings',
 }
 
 // Mock API delay
@@ -257,4 +260,298 @@ export async function getDashboardStats() {
     clickRate: avgClickRate.toFixed(1),
     recentCampaigns: campaigns.slice(0, 5),
   }
+}
+
+// ==========================================
+// ADMIN / SYSTEM OWNER FUNCTIONS
+// ==========================================
+
+const ADMIN_EMAIL = 'admin@platform.com'
+const ADMIN_PASSWORD = 'admin123'
+
+// Initialize mock tenants data
+const getInitialTenants = (): TenantWithStats[] => [
+  {
+    id: 'tenant_1',
+    name: 'Acme Marketing Co',
+    logo: '',
+    createdAt: '2024-01-01T00:00:00Z',
+    status: 'active',
+    plan: 'pro',
+    contactCount: 12500,
+    campaignCount: 45,
+    smsCredits: 8500,
+    emailCredits: 45000,
+    monthlyRevenue: 299,
+    lastActiveAt: '2024-01-22T15:30:00Z',
+  },
+  {
+    id: 'tenant_2',
+    name: 'Digital Solutions Inc',
+    logo: '',
+    createdAt: '2024-01-05T00:00:00Z',
+    status: 'active',
+    plan: 'enterprise',
+    contactCount: 58000,
+    campaignCount: 120,
+    smsCredits: 25000,
+    emailCredits: 150000,
+    monthlyRevenue: 799,
+    lastActiveAt: '2024-01-22T14:00:00Z',
+  },
+  {
+    id: 'tenant_3',
+    name: 'StartupXYZ',
+    logo: '',
+    createdAt: '2024-01-10T00:00:00Z',
+    status: 'trial',
+    plan: 'free',
+    contactCount: 250,
+    campaignCount: 3,
+    smsCredits: 100,
+    emailCredits: 500,
+    monthlyRevenue: 0,
+    lastActiveAt: '2024-01-21T10:00:00Z',
+  },
+  {
+    id: 'tenant_4',
+    name: 'RetailMax',
+    logo: '',
+    createdAt: '2023-12-15T00:00:00Z',
+    status: 'active',
+    plan: 'starter',
+    contactCount: 3200,
+    campaignCount: 28,
+    smsCredits: 2000,
+    emailCredits: 10000,
+    monthlyRevenue: 49,
+    lastActiveAt: '2024-01-22T09:15:00Z',
+  },
+  {
+    id: 'tenant_5',
+    name: 'HealthCare Plus',
+    logo: '',
+    createdAt: '2023-11-20T00:00:00Z',
+    status: 'suspended',
+    plan: 'pro',
+    contactCount: 8900,
+    campaignCount: 0,
+    smsCredits: 0,
+    emailCredits: 0,
+    monthlyRevenue: 0,
+    lastActiveAt: '2024-01-05T12:00:00Z',
+  },
+  {
+    id: 'tenant_6',
+    name: 'TechFlow Agency',
+    logo: '',
+    createdAt: '2024-01-15T00:00:00Z',
+    status: 'active',
+    plan: 'pro',
+    contactCount: 5600,
+    campaignCount: 12,
+    smsCredits: 4500,
+    emailCredits: 22000,
+    monthlyRevenue: 299,
+    lastActiveAt: '2024-01-22T16:45:00Z',
+  },
+]
+
+const getInitialSystemSettings = (): SystemSettings => ({
+  defaultSmsCredits: 100,
+  defaultEmailCredits: 500,
+  trialDays: 14,
+  smsPricePerCredit: 0.02,
+  emailPricePerCredit: 0.001,
+  supportEmail: 'support@platform.com',
+})
+
+// Admin Auth
+export async function adminLogin(email: string, password: string): Promise<AdminUser | null> {
+  await delay()
+  
+  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    const admin: AdminUser = {
+      id: 'admin_1',
+      email: ADMIN_EMAIL,
+      name: 'System Admin',
+      role: 'super_admin',
+      createdAt: '2023-01-01T00:00:00Z',
+    }
+    setToStorage(STORAGE_KEYS.ADMIN_USER, admin)
+    
+    // Initialize tenants if not exists
+    if (!getFromStorage<TenantWithStats[]>(STORAGE_KEYS.ALL_TENANTS)) {
+      setToStorage(STORAGE_KEYS.ALL_TENANTS, getInitialTenants())
+    }
+    if (!getFromStorage<SystemSettings>(STORAGE_KEYS.SYSTEM_SETTINGS)) {
+      setToStorage(STORAGE_KEYS.SYSTEM_SETTINGS, getInitialSystemSettings())
+    }
+    
+    return admin
+  }
+  
+  return null
+}
+
+export function adminLogout(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STORAGE_KEYS.ADMIN_USER)
+}
+
+export function getAdminUser(): AdminUser | null {
+  return getFromStorage<AdminUser>(STORAGE_KEYS.ADMIN_USER)
+}
+
+// Tenant management
+export async function getAllTenants(): Promise<TenantWithStats[]> {
+  await delay(200)
+  let tenants = getFromStorage<TenantWithStats[]>(STORAGE_KEYS.ALL_TENANTS)
+  if (!tenants) {
+    tenants = getInitialTenants()
+    setToStorage(STORAGE_KEYS.ALL_TENANTS, tenants)
+  }
+  return tenants
+}
+
+export async function getTenantById(id: string): Promise<TenantWithStats | null> {
+  const tenants = await getAllTenants()
+  return tenants.find(t => t.id === id) || null
+}
+
+export async function createTenant(data: {
+  name: string
+  email: string
+  plan: 'free' | 'starter' | 'pro' | 'enterprise'
+}): Promise<TenantWithStats> {
+  await delay()
+  
+  const settings = getSystemSettings()
+  const tenants = await getAllTenants()
+  
+  const newTenant: TenantWithStats = {
+    id: 'tenant_' + generateId(),
+    name: data.name,
+    createdAt: new Date().toISOString(),
+    status: data.plan === 'free' ? 'trial' : 'active',
+    plan: data.plan,
+    contactCount: 0,
+    campaignCount: 0,
+    smsCredits: settings?.defaultSmsCredits || 100,
+    emailCredits: settings?.defaultEmailCredits || 500,
+    monthlyRevenue: data.plan === 'free' ? 0 : data.plan === 'starter' ? 49 : data.plan === 'pro' ? 299 : 799,
+    lastActiveAt: new Date().toISOString(),
+  }
+  
+  setToStorage(STORAGE_KEYS.ALL_TENANTS, [...tenants, newTenant])
+  return newTenant
+}
+
+export async function updateTenantAdmin(id: string, updates: Partial<TenantWithStats>): Promise<TenantWithStats | null> {
+  await delay()
+  
+  const tenants = await getAllTenants()
+  const index = tenants.findIndex(t => t.id === id)
+  if (index === -1) return null
+  
+  tenants[index] = { ...tenants[index], ...updates }
+  setToStorage(STORAGE_KEYS.ALL_TENANTS, tenants)
+  return tenants[index]
+}
+
+export async function deleteTenantAdmin(id: string): Promise<void> {
+  await delay()
+  const tenants = await getAllTenants()
+  setToStorage(STORAGE_KEYS.ALL_TENANTS, tenants.filter(t => t.id !== id))
+}
+
+export async function suspendTenant(id: string): Promise<TenantWithStats | null> {
+  return updateTenantAdmin(id, { status: 'suspended' })
+}
+
+export async function activateTenant(id: string): Promise<TenantWithStats | null> {
+  return updateTenantAdmin(id, { status: 'active' })
+}
+
+export async function addCreditsToTenant(id: string, smsCredits: number, emailCredits: number): Promise<TenantWithStats | null> {
+  const tenant = await getTenantById(id)
+  if (!tenant) return null
+  
+  return updateTenantAdmin(id, {
+    smsCredits: tenant.smsCredits + smsCredits,
+    emailCredits: tenant.emailCredits + emailCredits,
+  })
+}
+
+// Platform stats
+export async function getPlatformStats(): Promise<PlatformStats> {
+  await delay(200)
+  const tenants = await getAllTenants()
+  
+  const activeTenants = tenants.filter(t => t.status === 'active').length
+  const totalRevenue = tenants.reduce((sum, t) => sum + t.monthlyRevenue, 0)
+  const totalCampaigns = tenants.reduce((sum, t) => sum + t.campaignCount, 0)
+  const totalContacts = tenants.reduce((sum, t) => sum + t.contactCount, 0)
+  const totalSmsSent = tenants.reduce((sum, t) => sum + (10000 - t.smsCredits), 0)
+  const totalEmailsSent = tenants.reduce((sum, t) => sum + (50000 - t.emailCredits), 0)
+  
+  return {
+    totalTenants: tenants.length,
+    activeTenants,
+    totalRevenue,
+    totalCampaigns,
+    totalContacts,
+    totalSmsSent: Math.max(0, totalSmsSent),
+    totalEmailsSent: Math.max(0, totalEmailsSent),
+    revenueGrowth: 12.5,
+    tenantGrowth: 8.3,
+  }
+}
+
+// System settings
+export function getSystemSettings(): SystemSettings | null {
+  let settings = getFromStorage<SystemSettings>(STORAGE_KEYS.SYSTEM_SETTINGS)
+  if (!settings) {
+    settings = getInitialSystemSettings()
+    setToStorage(STORAGE_KEYS.SYSTEM_SETTINGS, settings)
+  }
+  return settings
+}
+
+export function updateSystemSettings(updates: Partial<SystemSettings>): SystemSettings | null {
+  const settings = getSystemSettings()
+  if (!settings) return null
+  const updated = { ...settings, ...updates }
+  setToStorage(STORAGE_KEYS.SYSTEM_SETTINGS, updated)
+  return updated
+}
+
+// Admin analytics
+export function getAdminRevenueData(): { month: string; revenue: number; tenants: number }[] {
+  return [
+    { month: 'Aug', revenue: 8200, tenants: 42 },
+    { month: 'Sep', revenue: 9100, tenants: 48 },
+    { month: 'Oct', revenue: 10500, tenants: 55 },
+    { month: 'Nov', revenue: 11200, tenants: 61 },
+    { month: 'Dec', revenue: 12800, tenants: 68 },
+    { month: 'Jan', revenue: 14500, tenants: 76 },
+  ]
+}
+
+export function getAdminUsageData(): { date: string; sms: number; email: number }[] {
+  const data: { date: string; sms: number; email: number }[] = []
+  const today = new Date()
+  
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    
+    data.push({
+      date: date.toISOString().split('T')[0],
+      sms: Math.floor(Math.random() * 5000) + 2000,
+      email: Math.floor(Math.random() * 25000) + 10000,
+    })
+  }
+  
+  return data
 }

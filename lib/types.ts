@@ -61,3 +61,44 @@ export interface AnalyticsData {
   opened: number
   clicked: number
 }
+
+// Admin types
+export interface AdminUser {
+  id: string
+  email: string
+  name: string
+  role: 'super_admin'
+  createdAt: string
+}
+
+export interface TenantWithStats extends Tenant {
+  status: 'active' | 'suspended' | 'trial'
+  plan: 'free' | 'starter' | 'pro' | 'enterprise'
+  contactCount: number
+  campaignCount: number
+  smsCredits: number
+  emailCredits: number
+  monthlyRevenue: number
+  lastActiveAt: string
+}
+
+export interface PlatformStats {
+  totalTenants: number
+  activeTenants: number
+  totalRevenue: number
+  totalCampaigns: number
+  totalContacts: number
+  totalSmsSent: number
+  totalEmailsSent: number
+  revenueGrowth: number
+  tenantGrowth: number
+}
+
+export interface SystemSettings {
+  defaultSmsCredits: number
+  defaultEmailCredits: number
+  trialDays: number
+  smsPricePerCredit: number
+  emailPricePerCredit: number
+  supportEmail: string
+}
