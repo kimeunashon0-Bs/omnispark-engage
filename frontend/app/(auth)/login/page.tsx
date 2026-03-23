@@ -56,9 +56,9 @@ export default function LoginPage() {
       {/* Premium Logo */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-gold shadow-gold mb-4">
-          <Sparkles className="h-8 w-8 text-primary" />
+          {/* <Sparkles className="h-8 w-8 text-primary" /> */}
         </div>
-        <h1 className="text-3xl font-bold font-serif tracking-tight text-foreground">Nexus</h1>
+        <h1 className="text-3xl font-bold font-serif tracking-tight text-foreground">OMNISPARK-ENGAGE</h1>
         <p className="text-muted-foreground mt-1">Enterprise Marketing Platform</p>
       </div>
 
